@@ -127,21 +127,21 @@ instance.prototype.action = function (action) {
 
 		case 'switch':
 			if (opt.source == '1') {
-				cmd = '\xAA\xBB\x03\x01\x01\xEE';
+				cmd = new Buffer([0xAA,0xBBx03,0x01,0x01,0xEE]);
 			} else if (opt.source == '2') {
-				cmd = '\xAA\xBB\x03\x01\x02\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x02,0xEE]);
 			} else if (opt.source == '3') {
-				cmd = '\xAA\xBB\x03\x01\x03\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x03,0xEE]);
 			} else if (opt.source == '4') {
-				cmd = '\xAA\xBB\x03\x01\x04\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x04,0xEE]);
 			} else if (opt.source == '5') {
-				cmd = '\xAA\xBB\x03\x01\x05\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x05,0xEE]);
 			} else if (opt.source == '6') {
-				cmd = '\xAA\xBB\x03\x01\x06\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x06,0xEE]);
 			} else if (opt.source == '7') {
-				cmd = '\xAA\xBB\x03\x01\x07\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x07,0xEE]);
 			} else if (opt.source == '8') {
-				cmd = '\xAA\xBB\x03\x01\x08\xEE';
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x08,0xEE]);
 			}
 			break;
 
