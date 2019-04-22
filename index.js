@@ -127,7 +127,7 @@ instance.prototype.action = function (action) {
 
 		case 'switch':
 			if (opt.source == '1') {
-				cmd = new Buffer([0xAA,0xBBx03,0x01,0x01,0xEE]);
+				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x01,0xEE]);
 			} else if (opt.source == '2') {
 				cmd = new Buffer([0xAA,0xBB,0x03,0x01,0x02,0xEE]);
 			} else if (opt.source == '3') {
