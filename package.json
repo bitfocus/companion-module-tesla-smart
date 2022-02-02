@@ -1,10 +1,10 @@
 {
 	"name": "tesla-smart",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"api_version": "1.0.0",
 	"keywords": [
 		"Matrix"
-		],
+	],
 	"manufacturer": "Tesla",
 	"product": "smart 8>1",
 	"shortname": "Tesla kvm",
