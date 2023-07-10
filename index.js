@@ -47,6 +47,7 @@ instance.prototype.init = function() {
 	log = self.log;
 
 	self.current_host_id = '0';
+	self.setVariable('currentPort', '0');
 	self.polling = false;
 	self.choices = self.CHOICES_PC.slice(0, self.config.sources);
 
