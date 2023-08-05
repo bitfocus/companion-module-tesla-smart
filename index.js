@@ -33,6 +33,13 @@ instance.prototype.CHOICES_PC = [
 	{ id: '16', label: 'Source 16' },
 ];
 
+self.setVariableDefinitions( [
+	{
+		label: 'Current active HDMI port',
+		name: "currentPort"
+	}
+] );
+
 instance.prototype.init = function() {
 	var self = this;
 
@@ -40,6 +47,7 @@ instance.prototype.init = function() {
 	log = self.log;
 
 	self.current_host_id = '0';
+	self.setVariable('currentPort', '0');
 	self.polling = false;
 	self.choices = self.CHOICES_PC.slice(0, self.config.sources);
 
@@ -320,36 +328,52 @@ instance.prototype.processData = function(data) {
 
 	if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x00,0x16])) == 0) {
 		self.current_host_id = '1';
+		self.setVariable('currentPort', '1');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x01,0x17])) == 0) {
 		self.current_host_id = '2';
+		self.setVariable('currentPort', '2');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x02,0x18])) == 0) {
 		self.current_host_id = '3';
+		self.setVariable('currentPort', '3');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x03,0x19])) == 0) {
 		self.current_host_id = '4';
+		self.setVariable('currentPort', '4');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x04,0x1A])) == 0) {
 		self.current_host_id = '5';
+		self.setVariable('currentPort', '5');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x05,0x1B])) == 0) {
 		self.current_host_id = '6';
+		self.setVariable('currentPort', '6');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x06,0x1C])) == 0) {
 		self.current_host_id = '7';
+		self.setVariable('currentPort', '7');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x07,0x1D])) == 0) {
 		self.current_host_id = '8';
+		self.setVariable('currentPort', '8');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x08,0x1E])) == 0) {
 		self.current_host_id = '9';
+		self.setVariable('currentPort', '9');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x09,0x1F])) == 0) {
 		self.current_host_id = '10';
+		self.setVariable('currentPort', '10');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0A,0x20])) == 0) {
 		self.current_host_id = '11';
+		self.setVariable('currentPort', '11');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0B,0x21])) == 0) {
 		self.current_host_id = '12';
+		self.setVariable('currentPort', '12');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0C,0x22])) == 0) {
 		self.current_host_id = '13';
+		self.setVariable('currentPort', '13');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0D,0x23])) == 0) {
 		self.current_host_id = '14';
+		self.setVariable('currentPort', '14');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0E,0x24])) == 0) {
 		self.current_host_id = '15';
+		self.setVariable('currentPort', '15');
 	} else if(data.compare(Buffer.from([0xAA,0xBB,0x03,0x11,0x0F,0x25])) == 0) {
 		self.current_host_id = '16';
+		self.setVariable('currentPort', '16');
 	}
 
 	self.checkFeedbacks('current_host');
