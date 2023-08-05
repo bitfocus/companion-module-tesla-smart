@@ -1,6 +1,7 @@
 // @ts-check
 
 import { InstanceBase, InstanceStatus, Regex, TCPHelper, combineRgb, runEntrypoint } from '@companion-module/base'
+import { UpgradeScripts } from './upgrades.js'
 
 /**
  * @param {number} count
@@ -25,8 +26,6 @@ class instance extends InstanceBase {
 
 		this.current_host_id = 0
 
-		this.initActions()
-
 		// Connect to KVM device
 		this.init_tcp()
 
@@ -34,8 +33,8 @@ class instance extends InstanceBase {
 		this.#start_polling_for_host()
 
 		// Initialize the feedback workflow
+		this.initActions()
 		this.initFeedbacks()
-
 		this.initVariables()
 		this.setVariableValues({
 			currentPort: 0,
@@ -94,9 +93,7 @@ class instance extends InstanceBase {
 		}
 	}
 
-	// Return config fields for web config
 	/**
-	 *
 	 * @returns {import('@companion-module/base').SomeCompanionConfigField[]}
 	 */
 	getConfigFields() {
@@ -112,7 +109,7 @@ class instance extends InstanceBase {
 				type: 'number',
 				id: 'port',
 				label: 'Target Port',
-				width: 2,
+				width: 6,
 				default: 5000,
 				min: 1,
 				max: 65535,
@@ -199,16 +196,14 @@ class instance extends InstanceBase {
 
 		this.setFeedbackDefinitions({
 			current_host: {
-				type: 'advanced',
+				type: 'boolean',
 				name: 'Currently selected source',
 				description: 'Feedback showing the currently selected source',
+				defaultStyle: {
+					bgcolor: combineRgb(0, 255, 0),
+					color: combineRgb(0, 0, 0),
+				},
 				options: [
-					{
-						type: 'colorpicker',
-						label: 'Background color',
-						id: 'bg_color',
-						default: combineRgb(0, 255, 0),
-					},
 					{
 						type: 'dropdown',
 						label: 'Source',
@@ -218,11 +213,7 @@ class instance extends InstanceBase {
 					},
 				],
 				callback: (feedback) => {
-					if (Number(feedback.options.host_id) === this.current_host_id) {
-						return { bgcolor: Number(feedback.options.bg_color) }
-					} else {
-						return {}
-					}
+					return Number(feedback.options.host_id) === this.current_host_id
 				},
 			},
 		})
@@ -264,4 +255,4 @@ class instance extends InstanceBase {
 	}
 }
 
-runEntrypoint(instance, [])
+runEntrypoint(instance, UpgradeScripts)
