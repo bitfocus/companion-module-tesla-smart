@@ -1,0 +1,26 @@
+{
+	"id": "tesla-smart",
+	"name": "tesla-smart",
+	"shortname": "Tesla kvm",
+	"description": "Tesla Smart plugin for Companion",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/bitfocus/companion-module-tesla-smart.git",
+	"bugs": "https://github.com/bitfocus/companion-module-tesla-smart/issues",
+	"maintainers": [
+		{
+			"name": "Jeffrey Davidsz",
+			"email": "jeffrey.davidsz@vicreo.eu"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node18",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../index.js"
+	},
+	"manufacturer": "Tesla",
+	"products": ["smart 8>1"],
+	"keywords": ["Matrix"]
+}

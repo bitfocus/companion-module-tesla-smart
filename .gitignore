@@ -1,0 +1,5 @@
+/pkg
+/pkg.tgz
+node_modules
+*.log
+DEBUG-*
