@@ -1,7 +1,5 @@
-var tcp = require('../../tcp')
-var instance_skel = require('../../instance_skel')
-var debug
-var log
+const tcp = require('../../tcp')
+const instance_skel = require('../../instance_skel')
 
 const CHOICES_PC = [
 	{ id: '1', label: 'Source 1' },
@@ -24,99 +22,88 @@ const CHOICES_PC = [
 
 class instance extends instance_skel {
 	init() {
-		var self = this
+		this.current_host_id = '0'
+		this.setVariable('currentPort', '0')
+		this.polling = false
+		this.choices = CHOICES_PC.slice(0, this.config.sources)
 
-		debug = self.debug
-		log = self.log
-
-		self.current_host_id = '0'
-		self.setVariable('currentPort', '0')
-		self.polling = false
-		self.choices = CHOICES_PC.slice(0, self.config.sources)
-
-		self.actions()
+		this.actions()
 
 		// Connect to KVM device
-		self.init_tcp()
+		this.init_tcp()
 
 		// Start polling for feedback
-		self.start_polling_for_host()
+		this.start_polling_for_host()
 
 		// Initialize the feedback workflow
-		self.initFeedbacks()
+		this.initFeedbacks()
 	}
 
 	// Reconnect to KVM after config updated, in case of IP or port change
 	updateConfig(config) {
-		var self = this
-
-		if (self.socket !== undefined) {
-			self.socket.destroy()
-			delete self.socket
+		if (this.socket !== undefined) {
+			this.socket.destroy()
+			delete this.socket
 		}
 
-		self.config = config
-		self.choices = CHOICES_PC.slice(0, self.config.sources)
+		this.config = config
+		this.choices = CHOICES_PC.slice(0, this.config.sources)
 
-		self.actions()
-		self.initFeedbacks()
+		this.actions()
+		this.initFeedbacks()
 
-		self.initVariables()
+		this.initVariables()
 
-		self.init_tcp()
+		this.init_tcp()
 
-		self.stop_polling_for_host()
-		self.start_polling_for_host()
+		this.stop_polling_for_host()
+		this.start_polling_for_host()
 	}
 
 	init_tcp() {
-		var self = this
-
-		if (self.socket !== undefined) {
-			self.socket.destroy()
-			delete self.socket
+		if (this.socket !== undefined) {
+			this.socket.destroy()
+			delete this.socket
 		}
 
-		self.status(self.STATE_WARNING, 'Connecting')
+		this.status(this.STATE_WARNING, 'Connecting')
 
-		if (self.config.host) {
-			self.socket = new tcp(self.config.host, self.config.port)
+		if (this.config.host) {
+			this.socket = new tcp(this.config.host, this.config.port)
 
-			self.socket.on('status_change', function (status, message) {
-				self.status(status, message)
+			this.socket.on('status_change', (status, message) => {
+				this.status(status, message)
 			})
 
-			self.socket.on('error', function (err) {
-				debug('Network error', err)
-				self.status(self.STATE_ERROR, err)
-				self.log('error', 'Network error: ' + err.message)
+			this.socket.on('error', (err) => {
+				this.debug('Network error', err)
+				this.status(this.STATE_ERROR, err)
+				this.log('error', 'Network error: ' + err.message)
 			})
 
-			self.socket.on('connect', function () {
-				self.status(self.STATE_OK)
-				debug('Connected')
+			this.socket.on('connect', () => {
+				this.status(this.STATE_OK)
+				this.debug('Connected')
 			})
 
-			self.socket.on('data', function (chunk) {
-				var data = Buffer.from(chunk)
-				debug('Received ', data)
+			this.socket.on('data', (chunk) => {
+				const data = Buffer.from(chunk)
+				this.debug('Received ', data)
 
-				self.processData(data)
+				this.processData(data)
 			})
 		}
 	}
 
 	// Return config fields for web config
 	config_fields() {
-		var self = this
-
 		return [
 			{
 				type: 'textinput',
 				id: 'host',
 				label: 'KVM IP',
 				width: 6,
-				regex: self.REGEX_IP,
+				regex: this.REGEX_IP,
 			},
 			{
 				type: 'textinput',
@@ -124,7 +111,7 @@ class instance extends instance_skel {
 				label: 'Target Port',
 				width: 2,
 				default: 5000,
-				regex: self.REGEX_PORT,
+				regex: this.REGEX_PORT,
 			},
 			{
 				type: 'number',
@@ -149,21 +136,15 @@ class instance extends instance_skel {
 
 	// When module gets deleted
 	destroy() {
-		var self = this
+		this.stop_polling_for_host()
 
-		self.stop_polling_for_host()
-
-		if (self.socket !== undefined) {
-			self.socket.destroy()
+		if (this.socket) {
+			this.socket.destroy()
 		}
-
-		debug('destroy', self.id)
 	}
 
 	actions() {
-		var self = this
-
-		self.setActions({
+		this.setActions({
 			switch: {
 				label: 'Switch source',
 				options: [
@@ -172,7 +153,7 @@ class instance extends instance_skel {
 						id: 'id_send',
 						label: 'Source:',
 						default: '1',
-						choices: self.choices,
+						choices: this.choices,
 					},
 				],
 			},
@@ -180,12 +161,11 @@ class instance extends instance_skel {
 	}
 
 	action(action) {
-		var self = this
-		var cmd
+		let cmd
 
 		switch (action.action) {
 			case 'switch':
-				var id = action.options.id_send
+				let id = action.options.id_send
 				if (id == '1') {
 					cmd = Buffer.from([0xaa, 0xbb, 0x03, 0x01, 0x01, 0xee])
 				} else if (id == '2') {
@@ -223,12 +203,12 @@ class instance extends instance_skel {
 		}
 
 		if (cmd !== undefined) {
-			debug('sending ', cmd, 'to', self.config.host)
+			this.debug('sending ', cmd, 'to', this.config.host)
 
-			if (self.socket !== undefined && self.socket.connected) {
-				self.socket.send(cmd)
+			if (this.socket !== undefined && this.socket.connected) {
+				this.socket.send(cmd)
 			} else {
-				debug('Socket not connected :(')
+				this.debug('Socket not connected :(')
 			}
 		}
 	}
@@ -243,9 +223,7 @@ class instance extends instance_skel {
 	}
 
 	initFeedbacks() {
-		var self = this
-
-		var feedbacks = {}
+		const feedbacks = {}
 
 		feedbacks['current_host'] = {
 			label: 'Currently selected source',
@@ -255,19 +233,19 @@ class instance extends instance_skel {
 					type: 'colorpicker',
 					label: 'Background color',
 					id: 'bg_color',
-					default: self.rgb(0, 255, 0),
+					default: this.rgb(0, 255, 0),
 				},
 				{
 					type: 'dropdown',
 					label: 'Source',
 					id: 'host_id',
 					default: '1',
-					choices: self.choices,
+					choices: this.choices,
 				},
 			],
 		}
 
-		self.setFeedbackDefinitions(feedbacks)
+		this.setFeedbackDefinitions(feedbacks)
 	}
 
 	feedback(feedback) {
@@ -280,93 +258,85 @@ class instance extends instance_skel {
 	}
 
 	poll_for_active_host() {
-		var self = this
+		this.debug('Polling KVM ', this.config.host)
 
-		debug('Polling KVM ', self.config.host)
-
-		if (self.socket !== undefined && self.socket.connected) {
-			self.socket.send(Buffer.from([0xaa, 0xbb, 0x03, 0x10, 0x00, 0xee]))
+		if (this.socket && this.socket.connected) {
+			this.socket.send(Buffer.from([0xaa, 0xbb, 0x03, 0x10, 0x00, 0xee]))
 		} else {
-			debug('Socket not connected :(')
+			this.debug('Socket not connected :(')
 		}
 
 		this.checkFeedbacks('current_host')
 	}
 
 	start_polling_for_host() {
-		var self = this
+		if (this.config.poll > 0) {
+			this.host_poller = setInterval(this.poll_for_active_host.bind(this), this.config.poll)
+			this.polling = true
 
-		if (self.config.poll > 0) {
-			self.host_poller = setInterval(self.poll_for_active_host.bind(self), self.config.poll)
-			self.polling = true
-
-			self.poll_for_active_host()
-			self.checkFeedbacks('current_host')
+			this.poll_for_active_host()
+			this.checkFeedbacks('current_host')
 		}
 	}
 
 	stop_polling_for_host() {
-		var self = this
-
-		if (self.polling) {
-			clearInterval(self.host_poller)
+		if (this.polling) {
+			clearInterval(this.host_poller)
 		}
 	}
 
 	processData(data) {
-		var self = this
-
 		if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x00, 0x16])) == 0) {
-			self.current_host_id = '1'
-			self.setVariable('currentPort', '1')
+			this.current_host_id = '1'
+			this.setVariable('currentPort', '1')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x01, 0x17])) == 0) {
-			self.current_host_id = '2'
-			self.setVariable('currentPort', '2')
+			this.current_host_id = '2'
+			this.setVariable('currentPort', '2')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x02, 0x18])) == 0) {
-			self.current_host_id = '3'
-			self.setVariable('currentPort', '3')
+			this.current_host_id = '3'
+			this.setVariable('currentPort', '3')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x03, 0x19])) == 0) {
-			self.current_host_id = '4'
-			self.setVariable('currentPort', '4')
+			this.current_host_id = '4'
+			this.setVariable('currentPort', '4')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x04, 0x1a])) == 0) {
-			self.current_host_id = '5'
-			self.setVariable('currentPort', '5')
+			this.current_host_id = '5'
+			this.setVariable('currentPort', '5')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x05, 0x1b])) == 0) {
-			self.current_host_id = '6'
-			self.setVariable('currentPort', '6')
+			this.current_host_id = '6'
+			this.setVariable('currentPort', '6')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x06, 0x1c])) == 0) {
-			self.current_host_id = '7'
-			self.setVariable('currentPort', '7')
+			this.current_host_id = '7'
+			this.setVariable('currentPort', '7')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x07, 0x1d])) == 0) {
-			self.current_host_id = '8'
-			self.setVariable('currentPort', '8')
+			this.current_host_id = '8'
+			this.setVariable('currentPort', '8')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x08, 0x1e])) == 0) {
-			self.current_host_id = '9'
-			self.setVariable('currentPort', '9')
+			this.current_host_id = '9'
+			this.setVariable('currentPort', '9')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x09, 0x1f])) == 0) {
-			self.current_host_id = '10'
-			self.setVariable('currentPort', '10')
+			this.current_host_id = '10'
+			this.setVariable('currentPort', '10')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0a, 0x20])) == 0) {
-			self.current_host_id = '11'
-			self.setVariable('currentPort', '11')
+			this.current_host_id = '11'
+			this.setVariable('currentPort', '11')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0b, 0x21])) == 0) {
-			self.current_host_id = '12'
-			self.setVariable('currentPort', '12')
+			this.current_host_id = '12'
+			this.setVariable('currentPort', '12')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0c, 0x22])) == 0) {
-			self.current_host_id = '13'
-			self.setVariable('currentPort', '13')
+			this.current_host_id = '13'
+			this.setVariable('currentPort', '13')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0d, 0x23])) == 0) {
-			self.current_host_id = '14'
-			self.setVariable('currentPort', '14')
+			this.current_host_id = '14'
+			this.setVariable('currentPort', '14')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0e, 0x24])) == 0) {
-			self.current_host_id = '15'
-			self.setVariable('currentPort', '15')
+			this.current_host_id = '15'
+			this.setVariable('currentPort', '15')
 		} else if (data.compare(Buffer.from([0xaa, 0xbb, 0x03, 0x11, 0x0f, 0x25])) == 0) {
-			self.current_host_id = '16'
-			self.setVariable('currentPort', '16')
+			this.current_host_id = '16'
+			this.setVariable('currentPort', '16')
 		}
 
-		self.checkFeedbacks('current_host')
+		this.checkFeedbacks('current_host')
 	}
 }
 
