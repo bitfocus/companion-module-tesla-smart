@@ -25,6 +25,7 @@ class instance extends InstanceBase {
 		this.config = config
 
 		this.current_host_id = 0
+		this.partial_host = false
 
 		// Connect to KVM device
 		this.init_tcp()
@@ -251,6 +252,23 @@ class instance extends InstanceBase {
 				currentPort: this.current_host_id,
 			})
 			this.checkFeedbacks('current_host')
+			this.partial_host = false
+			// The protocol here has a .. quick, where
+			// sometimes messages are split over two packets
+			// (See
+			// https://github.com/bbeaudoin/bash/blob/master/tesmart/README.md
+			// under Server Limitations) This here attempts to work around that by expecting the next packet to finish the message.
+		} else if (data.length === 4 && data[0] == 0xaa && data[1] == 0xbb && data[2] == 0x03 && data[3] == 0x11) {
+			this.partial_host = true
+		} else if (data.length === 2 && this.partial_host) {
+			this.current_host_id = data[0] + 1
+			this.setVariableValues({
+				currentPort: this.current_host_id,
+			})
+			this.checkFeedbacks('current_host')
+			this.partial_host = false
+		} else {
+			this.partial_host = false
 		}
 	}
 }
